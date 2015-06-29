@@ -6,10 +6,13 @@ Function process-parallel($arr, $SB){
     #Create the Runspace Pool
     $RunspacePool = [RunspaceFactory]::CreateRunspacePool()
 
+    #Create a runspace collection to hold the results
+    $RunspaceCollection = New-Object system.collections.arraylist
+
     #Open the pool
     $RunspacePool.Open()
 
-    foreach ($obj in $arr){
+    foreach ($obj in $arr){        
 
         #Create a powershell object
         $Powershell = [PowerShell]::Create()
@@ -17,30 +20,32 @@ Function process-parallel($arr, $SB){
         #Specify the runspace to use
         $Powershell.RunspacePool = $RunspacePool
 
-        #Add the script block to the processing
-        $Powershell.AddScript($SB)
+        #Add the script block to the processing  make sure this is piped to out-null or it will pollute your output
+        $Powershell.AddScript($SB) | Out-Null
 
-        #Add the current object as the parameter to the script block
-        $Powershell.AddParameter($obj)
+        #Add the current object as the parameter to the script block make sure this is piped to out-null or it will pollute your output
+        $Powershell.AddArgument($obj) | Out-Null
 
-        #create a collection to hold the runspaces
-        [Collections.ArrayList]$RunspaceCollection = [PSCustomObject]@{
-            #put the running powershell process into the runspace property, this also starts the job
-            Runspace = $Powershell.BeginInvoke()
-
-            #assign the Powershell process itself to the powershell property
-            Powershell = $Powershell
+        #create a temporary runspace object
+        $RS = New-Object -TypeName PSObject -Property @{
+            Runspace   = $PowerShell.BeginInvoke() 
+            PowerShell = $PowerShell
         }
+
+        #add the runspace to the collection, make sure this is piped to out-null or it will pollute your output with diag messages
+        $RunspaceCollection.Add($RS) | Out-Null
     }
 
+    #create a return array, this will be filled with the results of your query
     $return = @()
 
+    
     #While loop waits for 
     While($RunspaceCollection){
         #iterate through all runspaces in the collection, checking for results
         ForEach($Runspace in $RunspaceCollection.ToArray()){
             #check if the runspace is commpleted
-            if($Runspace.RunSpace.IsCompleted){
+            if($Runspace.RunSpace.IsCompleted -eq $true){
                 #if the runspace is completed, end invoking and assign the results to the $return variable
                 $return += $Runspace.Powershell.EndInvoke($Runspace.RunSpace)
 
@@ -51,7 +56,7 @@ Function process-parallel($arr, $SB){
             }
         }
     }
-
-    Return $return
+    
+    return $return
 }
 
