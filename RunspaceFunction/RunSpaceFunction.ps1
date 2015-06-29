@@ -2,7 +2,7 @@
 
 
 
-Function proccess-parallel($arr, $SB){
+Function process-parallel($arr, $SB){
     #Create the Runspace Pool
     $RunspacePool = [RunspaceFactory]::CreateRunspacePool()
 

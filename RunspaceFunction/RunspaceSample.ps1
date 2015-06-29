@@ -24,4 +24,4 @@ $SB = {
 
 }
 
-process-paralell $arr $SB
+process-parallel $arr $SB
