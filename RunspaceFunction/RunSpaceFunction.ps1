@@ -6,11 +6,11 @@ Function process-parallel($arr, $SB){
     #Create the Runspace Pool
     $RunspacePool = [RunspaceFactory]::CreateRunspacePool()
 
-    #Create a runspace collection to hold the results
-    $RunspaceCollection = New-Object system.collections.arraylist
-
     #Open the pool
     $RunspacePool.Open()
+
+    #Create a runspace collection to hold the results
+    $RunspaceCollection = New-Object system.collections.arraylist    
 
     foreach ($obj in $arr){        
 
