@@ -6,7 +6,7 @@ Function get-cpuUsage{
         $computerName = $env:COMPUTERNAME
       )
 
-    $Processes = [diagnostics.process]::GetProcesses()
+    $Processes = [diagnostics.process]::GetProcesses($computerName)
 
 
     $ProcNum = (Get-WmiObject win32_processor -Property numberoflogicalprocessors).numberoflogicalprocessors
