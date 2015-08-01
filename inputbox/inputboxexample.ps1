@@ -1,10 +1,11 @@
 ﻿Function get-info($computerName){
-    $return = "" | Select-Object OS,Driver,Disk,Share
-        
-    $return.OS = Get-WmiObject Win32_OperatingSystem -ComputerName $Computer.name
-    $return.Driver = Get-WmiObject Win32_SystemDriver -ComputerName $Computer.name
-    $return.Disk = Get-WmiObject Win32_logicalDisk -ComputerName $Computer.name
-    $return.share = Get-WmiObject win32_share -ComputerName $Computer.name
+    $return = "" | Select-Object Name,OS,Arc
+    $WMIOS = Get-WmiObject Win32_OperatingSystem -ComputerName $ComputerName
+    
+    $return.Name = $WMIOS.PSComputerName
+    $return.OS = $WMIOS.Name
+    $return.Arc = $WMIOS.OSArchitecture   
+    
 
     return $Return
 }
@@ -55,7 +56,7 @@ $btnGenerate.add_click({
     $Computers = get-content $txtInputFile.Text
     $results = @()
     Foreach($computer in $computers){
-        $results += get-info $computer
+        $results += get-info $Computer
     }
     $results | export-csv "results_$(get-date -f MM-dd-yyyy).csv"
 })
