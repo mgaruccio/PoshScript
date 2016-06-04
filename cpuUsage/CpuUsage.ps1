@@ -2,11 +2,17 @@
 Function get-cpuUsage{
 
     Param(
-        [Parameter(Position=1)]
-        $ComputerName = $env:COMPUTERNAME
+          $ComputerName = $env:COMPUTERNAME,
+          $ID
       )
 
-    $Processes = [diagnostics.process]::GetProcesses($ComputerName)
+    
+    if($ID){
+        $proc = [diagnostics.process]::GetProcessById($ID) 
+    }
+    else{
+        $Processes = [diagnostics.process]::GetProcesses($ComputerName)
+    }
 
 
     $ProcNum = (Get-WmiObject win32_processor -Property numberoflogicalprocessors -ComputerName $ComputerName).numberoflogicalprocessors
@@ -15,32 +21,54 @@ Function get-cpuUsage{
     $arr2 = @()
     $return = @()
 
-    ForEach ($process in $Processes){
+
+    if($proc){
         $arr1 += [PsCustomObject]@{
-            name = $process.ProcessName
-            cpu = $process.cpu
+            name = $proc.ProcessName
+            cpu = $proc.cpu
         }
     }
+    else{
+        ForEach ($process in $Processes){
+            $arr1 += [PsCustomObject]@{
+                name = $process.ProcessName
+                cpu = $process.cpu
+            }
+        }
+    }
+    $process = $null
+    Start-Sleep -Seconds 1   
 
-    Start-Sleep -Seconds 1    
-
-    ForEach ($process in $Processes){
+    if($proc){
         $arr2 += [PsCustomObject]@{
-            name = $process.ProcessName
-            cpu = $process.cpu
+            name = $proc.ProcessName
+            cpu = $proc.cpu
         }
     }
-
+    else{
+        ForEach ($process in $Processes){
+            $arr2 += [PsCustomObject]@{
+                name = $process.ProcessName
+                cpu = $process.cpu
+            }
+        }
+    }
 
     for($i=0;$i -le $arr1.count;$i++){
         $return += [PSCustomObject]@{
             name = $arr1[$i].name
-            time = ($arr2[$i].cpu - $arr1[$i].cpu) / $ProcNum * 100
+            time = (($arr2[$i].cpu - $arr1[$i].cpu)) / $ProcNum * 100
         }
     }
 
-    $return
-
+    if($id){
+        $return[0]
+    }
+    else{
+        $return
+    }
 }
 
 get-cpuUsage
+
+
